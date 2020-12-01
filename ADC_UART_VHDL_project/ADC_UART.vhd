@@ -13,10 +13,7 @@ entity ADC_UART is
 		clk_10M : in std_logic;
 		rst : in std_logic;
 		sample : in std_logic;
-		txd : out std_logic;
-		--debug
-		fft_real : out std_logic_vector(15 downto 0);
-		fft_imag : out std_logic_vector(15 downto 0)
+		txd : out std_logic
 		);
 end ADC_UART;
 -------------------------------------------------------------------------------------------------------------------------------
@@ -34,8 +31,7 @@ architecture behaviour of ADC_UART is
  	component uart_pll is
 		PORT (
 			inclk0 : in std_logic;
-			c0 : out std_logic;
-			C1 : out std_logic
+			c0 : out std_logic
 			);
 		end component uart_pll;
 				
@@ -75,21 +71,7 @@ architecture behaviour of ADC_UART is
 	signal s_rst : std_logic;					-- connected to push button for reset (not currently, held low)
 	signal sample_s : std_logic;				-- connected to a puch button, used to know when to send a sample
 	
-	--LFSR signals
-	signal s_rand_num : std_logic_vector(5 downto 0);
-	signal s_rand_enb : std_logic;
-	signal s_seed : std_logic_vector(5 downto 0) := "000000";
-	signal s_seed_dv : std_logic := '0';
-	signal noise : std_logic_vector(11 downto 0) := "000000000000";
-	
-	-- NCO Noise signals
-	signal NCO_clock 		: std_logic;
-	signal s_NCO_enb 		: std_logic := '1';
-	signal s_phi_inc_i 	: std_logic_vector(31 downto 0) := "00110011001100110011001100110011";
-	signal s_fsin_o 		: std_logic_vector(9 downto 0);
-	signal s_NCO_valid 	: std_logic;
-	signal s_NCO_reset_n : std_logic := '1';
-	signal s_noise_temp	: std_logic_vector(13 downto 0);
+
 	
 	-- UART TX signals
 	signal r_CLOCK     	: std_logic                    := '0';
@@ -134,8 +116,7 @@ begin
 	uart_pll_inst : uart_pll 
 		PORT MAP (
 			inclk0	 => clk_50M_s,
-			c0	 => r_CLOCK,
-			c1 => NCO_clock
+			c0	 => r_CLOCK
 			);
 		
  
@@ -167,7 +148,6 @@ begin
 	sample_s <= sample;
 	
 	s_rst <= '0';							-- hold ADC out of reset
-	s_rand_enb <= '1';					-- hold enable lfsr
 ----------------------------------------------------------------------------------------------------------------------------------------	
 	main : process(clk_50M_s)
 	begin
