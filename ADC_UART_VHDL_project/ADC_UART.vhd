@@ -11,7 +11,6 @@ entity ADC_UART is
 	port(
 		clk_50M : in std_logic;
 		clk_10M : in std_logic;
-		rst : in std_logic;
 		sample : in std_logic;
 		txd : out std_logic
 		);
@@ -60,6 +59,7 @@ architecture behaviour of ADC_UART is
 	signal sign2 : signed(13 downto 0);
 	signal signresult : signed(13 downto 0);
 	
+	-- Clock config for UART
 	-- uses a 100 MHz Clock
 	-- Want to interface to 115200 baud UART
 	-- 10000000 / 115200 = 87 Clocks Per Bit.
@@ -68,8 +68,8 @@ architecture behaviour of ADC_UART is
 	signal clk_50M_s : std_logic;				-- system clock
 	signal clk_10M_s : std_logic;				-- pll generated for UART
 	
-	signal s_rst : std_logic;					-- connected to push button for reset (not currently, held low)
-	signal sample_s : std_logic;				-- connected to a puch button, used to know when to send a sample
+	signal s_rst : std_logic;					-- ADC reset
+	signal sample_s : std_logic;				-- connected to a push button, initiates sampling and sending
 	
 
 	
@@ -87,15 +87,10 @@ architecture behaviour of ADC_UART is
 	-- TX signals
 	signal tx_upper1 : std_logic_vector(7 downto 0);
 	signal tx_lower1 : std_logic_vector(7 downto 0);
-	signal tx_upper2 : std_logic_vector(7 downto 0);
-	signal tx_lower2 : std_logic_vector(7 downto 0);
-	signal tx_upper3 : std_logic_vector(7 downto 0);
-	signal tx_lower3 : std_logic_vector(7 downto 0);
 	signal last_byte_was_upper :  boolean := true;
 	
 	-- State machine timing 
 	signal counter : natural := 0;
-	signal counter2 : natural := 0;
 	signal sample_count : integer := 0;
 	signal send_count : integer := 0;
 	
@@ -212,12 +207,12 @@ begin
 								counter <= counter + 1;
 							elsif (counter > 99) then
 								counter <= 0;
-								if (last_byte_was_upper = true) then				-- if the last byte sent was an upper, send lower
+								if (last_byte_was_upper = true) then			-- if the last byte sent was an upper, send lower
 									r_TX_BYTE <= tx_lower1;
 									r_TX_DV <= '1';
 									last_byte_was_upper <= false;
 									sm_main <= send_sample;
-								else															-- if the last byte sent was a lower, send upper and increment the sending index
+								else														-- if the last byte sent was a lower, send upper and increment the sending index
 									r_TX_BYTE <= tx_upper1;
 									r_TX_DV <= '1';
 									last_byte_was_upper <= true;
@@ -226,7 +221,7 @@ begin
 								end if;
 							end if;
 						else
-							r_TX_DV <= '0';												-- stop trying to send if already sending
+							r_TX_DV <= '0';											-- stop trying to send if already sending
 						end if;
 					end if;		
 
